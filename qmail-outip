@@ -3,19 +3,27 @@
 # TODO:
 # Reply status code
 # Cache - Done
-# Persistent State
+# Persistent State - Done
 #
 
 
 from twisted.internet import protocol, reactor
-import logging as logger
 import sys
 from qmail_outip import IpManagerFactory,IpAllocator
 import yaml
 from redis import Redis
+import logging
 
+logging.basicConfig(format="%(asctime)s %(funcName)s:%(lineno)s:%(levelname)s: %(message)s", level = logging.DEBUG)
 
-logger.basicConfig(level=logger.DEBUG, format="%(asctime)s %(levelname)s: %(message)s")
+logger = logging.getLogger("outip")
+
+logger.DEBUG = logging.DEBUG
+logger.WARNING = logging.WARNING
+logger.ERROR = logging.ERROR
+logger.INFO = logging.INFO
+logger.CRITICAL = logging.CRITICAL
+
 
 try:
   config = yaml.load(file(sys.argv[1]))
@@ -24,8 +32,10 @@ except IndexError:
   sys.exit(1)
 
 allocator = IpAllocator(config)
+port = int(config.get("port") or 9000)
 
-reactor.listenTCP(9000, IpManagerFactory(allocator))
+reactor.listenTCP(port, IpManagerFactory(allocator))
+logger.info("Listening on port %d"%(port))
 reactor.run()
 
 

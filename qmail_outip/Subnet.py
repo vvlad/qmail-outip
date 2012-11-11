@@ -3,7 +3,9 @@ import logging as logger
 from ipaddr import IPv4Address 
 from IpAddress import IpAddress
 import sys
-import logging as logger
+import logging
+
+logger = logging.getLogger("outip")
 
 class Subnet(object):
   

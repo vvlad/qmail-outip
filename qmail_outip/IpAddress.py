@@ -1,6 +1,8 @@
 
 import socket
-import logging as logger
+import logging
+
+logger = logging.getLogger("outip")
 
 class IpAddress:
   def __init__(self, ip_address, default_helo_host= None):

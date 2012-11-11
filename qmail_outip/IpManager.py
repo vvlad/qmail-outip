@@ -1,7 +1,11 @@
 
 from twisted.internet import protocol
 from twisted.protocols.basic import LineReceiver
-import logging as logger
+import logging
+from time import sleep
+import uuid
+
+logger = logging.getLogger("outip")
 
 STATE_NEW = "new"
 STATE_IP_SENT = "ip_send"
@@ -15,6 +19,8 @@ class IpManager(LineReceiver):
   def __init__(self,allocator):
     self.allocator = allocator
     self.state = STATE_NEW
+    self.ip_address = None
+    self.uuid = uuid.uuid4().hex
 
   def connectionMade(self):
     logger.debug("new connection")

@@ -1,6 +1,8 @@
 
 from Subnet import Subnet
-import logging as logger
+import logging
+
+logger = logging.getLogger("outip")
 
 class IpPool(object):
 

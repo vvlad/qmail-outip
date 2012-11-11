@@ -3,10 +3,11 @@ from IpAddress import IpAddress
 
 from IpPool import IpPool
 from redis import Redis
-import logging as logger
+import logging
 import pickle
 import hashlib
 
+logger = logging.getLogger("outip")
 
 class MemoryCache(object):
 

@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+#
+# TODO:
+# Reply status code
+# Cache - Done
+# Persistent State
+#
+
+
+from twisted.internet import protocol, reactor
+import logging as logger
+import sys
+from qmail_outip import IpManagerFactory,IpAllocator
+import yaml
+from redis import Redis
+
+
+logger.basicConfig(level=logger.DEBUG, format="%(asctime)s %(levelname)s: %(message)s")
+
+try:
+  config = yaml.load(file(sys.argv[1]))
+except IndexError:
+  print "%s <config file>"%(sys.argv[0])
+  sys.exit(1)
+
+allocator = IpAllocator(config)
+
+reactor.listenTCP(9000, IpManagerFactory(allocator))
+reactor.run()
+
+
+

@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+
+from twisted.internet import reactor, protocol
+from twisted.protocols.basic import LineReceiver
+from time import sleep
+from random import random
+
+# a client protocol
+
+dataset = [ "email-%d@gmail.com"%(i) for i in range(0,100)]
+
+class OutIpClient(LineReceiver):
+
+  delimiter = "\n"
+
+  def __init__(self,email):
+    self.email = email
+
+  def send(self,data):
+    self.transport.write(data + "\n")
+
+  def connectionMade(self):
+    
+    domain = self.email.split("@")[-1]
+    self.send("%s %s"%(domain, self.email))
+
+  def lineReceived(self,data):
+
+    bind_ip, helo_host = data.split(' ')
+    print "%s[%s]"%(bind_ip, helo_host)
+
+    self.send("%s 200 test message"%(bind_ip))
+    print "Done sending"
+
+  
+  def connectionLost(self, reason):
+      print "connection lost %s"%(reason)
+
+
+class OutIpFactory(protocol.ClientFactory):
+  protocol = OutIpClient 
+
+  def __init__(self, dataset):
+    self.dataset = dataset.__iter__()
+    self.email = None
+ 
+  def buildProtocol(self,addr):
+    try:
+      self.email = self.dataset.next()
+    except StopIteration:
+      reactor.stop()
+
+    return OutIpClient(self.email)
+
+  def clientConnectionFailed(self, connector, reason):
+    sleep(0.4)
+    connector.connect()
+  
+  def clientConnectionLost(self, connector, reason):
+    try:
+      self.email = self.dataset.next()
+      connector.connect()
+    except StopIteration:
+      reactor.stop()
+
+
+def main():
+  reactor.connectTCP("localhost", 9000, OutIpFactory(dataset))
+  reactor.run()
+
+if __name__ == '__main__':
+  main()
+
+
+
+
+

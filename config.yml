@@ -1,0 +1,30 @@
+
+redis:
+  #hostname of the redis server
+  hostname: localhost
+  #database id
+  database: 1
+  #time to live for cache objects 
+  ttl: 3600
+
+domains:
+  "gmail.com":
+    disable_cache: false
+    subnets:
+      - range: 127.0.0.0-127.0.0.16
+        max_messages: 5
+        max_interval: 2
+        fallback_helo_host:  test.host
+      - range: 127.0.0.17-127.0.0.20
+        max_messages: 5
+        max_interval: 10
+        fallback_helo_host:  test2.host
+  default:
+    disable_cache: true
+    subnets:
+      - range: 127.0.1.0-127.0.1.16
+        max_messages: 5
+        max_interval: 2
+        fallback_helo_host:  test2.host
+
+

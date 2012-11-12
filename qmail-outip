@@ -9,20 +9,9 @@
 
 from twisted.internet import protocol, reactor
 import sys
-from qmail_outip import IpManagerFactory,IpAllocator
+from qmail_outip import IpManagerFactory,IpAllocator,log
 import yaml
 from redis import Redis
-import logging
-
-logging.basicConfig(format="%(asctime)s %(funcName)s:%(lineno)s:%(levelname)s: %(message)s", level = logging.DEBUG)
-
-logger = logging.getLogger("outip")
-
-logger.DEBUG = logging.DEBUG
-logger.WARNING = logging.WARNING
-logger.ERROR = logging.ERROR
-logger.INFO = logging.INFO
-logger.CRITICAL = logging.CRITICAL
 
 
 try:
@@ -35,7 +24,7 @@ allocator = IpAllocator(config)
 port = int(config.get("port") or 9000)
 
 reactor.listenTCP(port, IpManagerFactory(allocator))
-logger.info("Listening on port %d"%(port))
+log.info("Listening on port %d",port)
 reactor.run()
 
 

@@ -3,11 +3,10 @@ from IpAddress import IpAddress
 
 from IpPool import IpPool
 from redis import Redis
-import logging
+import log
 import pickle
 import hashlib
-
-logger = logging.getLogger("outip")
+from log import warning,debug,info,critical,error,exception
 
 class MemoryCache(object):
 
@@ -40,7 +39,7 @@ class IpAllocator(object):
 
     if not key in keys:
       if len(keys) >0: self.redis.delete(*keys)
-      logger.info("Creating new pool for %s"%(name))
+      info("Creating new pool for %s"%(name))
       obj = IpPool(name, config)
     
     else:
@@ -51,9 +50,9 @@ class IpAllocator(object):
       obj = self.getCacheObject(key)
 
       if obj:
-        logger.info("Resuming existing pool for %s"%(name))
+        info("Resuming existing pool for %s"%(name))
       else:
-        logger.info("Creating new pool for %s could not resume the old one from the cache"%(name))
+        info("Creating new pool for %s could not resume the old one from the cache"%(name))
         obj = IpPool(name, config)
    
     return obj
@@ -65,10 +64,16 @@ class IpAllocator(object):
         db = int(config.get("db") or 0)
     )
     self.ttl = config.get("ttl")
+
+  def getAssociationKey(self, domain, email_address):
+    return "pool:%s:association:%s"%(domain,email_address)
   
-  def getIpAddress(self,domain,sender):
+  def invalidateAssociation(self, domain, email_address):
+    self.redis.delete(self.getAssociationKey(domain, email_address))
+
+  def getIpAddress(self, domain, email_address):
     pool = self.getPool(domain)
-    key = "pool:%s:association:%s"%(domain,sender)
+    key = self.getAssociationKey(domain, email_address)
     record = None
     should_use_cache = pool.isCacheable()
 
@@ -77,15 +82,17 @@ class IpAllocator(object):
     if record is None:
       record = pool.nextAddress()
       
+      if record is None:
+        warning("It seems that I wasn't able to figure out an ip address for %s on %s using pool %s"%(email_address,domain,pool.getName()))
+        return None
+
       if should_use_cache: record = self.setCacheObject(key, record, self.ttl )
-      else: logger.info("Not caching %s on %s due to the fact that %s pool has cache disabled"%(record,domain,pool.getName()))
+      else: info("Not caching %s on %s due to the fact that %s pool has cache disabled"%(record,domain,pool.getName()))
 
       self.setCacheObject(self.poolKey(pool.getName(),pool.getConfig()) , pool)
     
     else:
-    
-      logger.warning("It seems that I wasn't able to figure out an ip address for %s on %s using pool %s"%(sender,domain,pool.getName()))
-      logger.debug(pool)
+      debug(pool)
 
     return record 
 
@@ -95,14 +102,14 @@ class IpAllocator(object):
       data = self.redis.get(key)
       if data is not None: return pickle.loads(self.redis.get(key))
     except Exception as e:
-      logger.exception(e)
+      exception(e)
     
     return None
 
   def setCacheObject(self, key, value, expire = False):
     
     if value:
-      logger.debug("Caching %s"%(key))
+      debug("Caching %s"%(key))
       self.redis.set(key, pickle.dumps(value))
       if expire: self.redis.expire(key, expire)
     else:

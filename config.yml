@@ -11,20 +11,25 @@ domains:
   "gmail.com":
     disable_cache: false
     subnets:
-      - range: 127.0.0.0-127.0.0.16
-        max_messages: 5
-        max_interval: 2
-        fallback_helo_host:  test.host
-      - range: 127.0.0.17-127.0.0.20
-        max_messages: 5
-        max_interval: 10
-        fallback_helo_host:  test2.host
+      - range: 93.115.18.97-93.115.18.105 
+        max_messages: 10
+        max_interval: 1
+        fallback_helo_host: mailman 
+  
+  "yahoo.com":
+    disable_cache: false
+    subnets:
+      - range: 93.115.18.106-93.115.18.111
+        max_messages: 10
+        max_interval: 1
+        fallback_helo_host: mailman 
+  
   default:
     disable_cache: true
     subnets:
-      - range: 127.0.1.0-127.0.1.16
-        max_messages: 5
-        max_interval: 2
-        fallback_helo_host:  test2.host
+      - range: 93.115.18.111-93.115.18.126
+        max_messages: 10
+        max_interval: 1
+        fallback_helo_host: mailman 
 
 

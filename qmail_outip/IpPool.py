@@ -1,8 +1,6 @@
 
 from Subnet import Subnet
-import logging
-
-logger = logging.getLogger("outip")
+from log import warning,debug,info,critical,error,exception
 
 class IpPool(object):
 
@@ -11,7 +9,7 @@ class IpPool(object):
     self.current_subnet = None
     self.name = name
     self.config = config
-    logger.info(self)
+    info(self)
 
   def getConfig(self): return self.config
   def getName(self): return self.name
@@ -22,8 +20,8 @@ class IpPool(object):
     return "<IpPool name=%s subnets=%d doing_cache=%s subnet=%s>"%(
         self.name,
         len(self.subnets),
-        self.current_subnet,
-        self.isCacheable())
+        self.isCacheable(),
+        self.current_subnet)
 
   def nextAddress(self):
     seen = list()
@@ -32,35 +30,35 @@ class IpPool(object):
     while len(seen) != len(self.subnets):
       subnet = self.getSubnet()
       if subnet:
-        logger.debug("Looking at %s",subnet)
+        debug("Looking at %s",subnet)
         seen.append(subnet)
         ip_address = subnet.getIpAddress()
         if ip_address is None:
-          logger.warning("No address found for %s trying next subnet if any"%(subnet))
+          warning("No address found for %s trying next subnet if any"%(subnet))
           continue
         else:
-          logger.debug("Ok got %s from %s"%(ip_address,subnet))
+          debug("Ok got %s from %s"%(ip_address,subnet))
           break
 
       else:
-        logger.debug("No available subnets found")
+        debug("No available subnets found")
         return None
     return ip_address
 
   def getSubnet(self):
     if self.current_subnet and not self.current_subnet.isExhausted():
-      logger.debug("Ok %s might have additional capacity"%(self.current_subnet))
+      debug("Ok %s might have additional capacity"%(self.current_subnet))
       return self.current_subnet
     
     self.current_subnet = None
 
     for subnet in self.subnets:
       if not subnet.isExhausted():
-        logger.debug("Trying subnet %s"%(subnet))
+        debug("Trying subnet %s"%(subnet))
         self.current_subnet = subnet
         break
       else:
-        logger.warning("Found %s subnet but it's exhaused"%(subnet))
+        warning("Found %s subnet but it's exhaused"%(subnet))
     
     return self.current_subnet
 

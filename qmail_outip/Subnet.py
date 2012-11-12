@@ -1,11 +1,9 @@
 from time import time
-import logging as logger
+import log as logger
 from ipaddr import IPv4Address 
 from IpAddress import IpAddress
 import sys
-import logging
-
-logger = logging.getLogger("outip")
+from log import warning,debug,info,critical,error,exception
 
 class Subnet(object):
   
@@ -20,13 +18,13 @@ class Subnet(object):
     self.helo_host = config.get('fallback_helo_host')
     
     if self.helo_host is None:
-      logger.error("Missing fallback_helo_host for subnet %s"%(config)) 
+      error("Missing fallback_helo_host for subnet %s"%(config)) 
       sys.exit(1)
 
     self.current_address = None
     if config.has_key('range'):
       start,stop = config['range'].split("-",2)
-      _range = xrange( int(IPv4Address(start)), int(IPv4Address(stop)) )
+      _range = xrange( int(IPv4Address(start))-1, int(IPv4Address(stop)) )
 
 
     if config.has_key("max_messages"): self.max_messages = config["max_messages"]
@@ -34,6 +32,7 @@ class Subnet(object):
 
     self.range = _range
     self.reset()
+    self.blacklist = []
 
   def __str__(self):
 
@@ -67,11 +66,11 @@ class Subnet(object):
     seconds = now - self.last_request
     
     if seconds > self.max_interval:
-      logger.debug("Timeout reached for %s moving to the next address"%(self))
+      debug("Timeout reached for %s moving to the next address"%(self))
       self.nextIpAddress()
     
     if self.current_messages >= self.max_messages:
-      logger.debug("Message limit reached for %s moving to the next address"%(self))
+      debug("Message limit reached for %s moving to the next address"%(self))
       self.nextIpAddress()
     
     if self.current_address:
@@ -82,15 +81,28 @@ class Subnet(object):
 
   def nextIpAddress(self):
     self.current_address = None
-    if self.iterator <= self.range[-1]:
+    
+    while self.iterator <= self.range[-1]:
       self.iterator += 1
-      self.current_address = IpAddress(str(IPv4Address(self.iterator)), default_helo_host = self.helo_host)
+      address = IpAddress(str(IPv4Address(self.iterator)), default_helo_host = self.helo_host, subnet = self)
+      
+      if address.ip_address in self.blacklist:
+        error("%s is blacklisted",address.ip_address)
+        continue
+
+      self.current_address = address 
       self.current_messages = 0
       self.last_request = 0
-      logger.info(self)
+      info(self)
       return self.current_address
-    else:
-      self.exhausted = True
+    
+    self.exhausted = True
+    return None
+
+  def blacklistIpAddress(self, ip_address): self.blacklist.append(ip_address)
+
+
+
 
 
 

@@ -8,20 +8,37 @@ redis:
   ttl: 3600
 
 domains:
+#
+# <recieving domain>: # the name of the domain is receiving the emails or "default" as a fallback rule
+#                     # if receiving domain doesn't match a more specific rule.
+#   disable_cache: false # true disables the caching mechanism
+#   subnets: #list of subnets
+#     - range: <start-ip>-<end-ip> #the range can spawn accross multiple /24
+#       max_messages: <integer> #the maximum number of messages that 
+#                               #should be sent using an ip address from this subnet
+#                               #after this number is reached the ip is incremented
+#       max_interval: <integer> #maximum amount of time that this subnet yields an ip addresse
+#                               #after this amount of time the ip is incremented
+#       fallback_helo_host: <hostname>  #a hostname that should be used in the case of a reverse
+#                                       #dns lookup failure for an ip from this subnet
+#
+#
   "gmail.com":
     disable_cache: false
     subnets:
       - range: 93.115.18.97-93.115.18.105 
-        max_messages: 10
-        max_interval: 1
+        max_messages: 1
+        max_interval: 60
+        max_errors: 400
         fallback_helo_host: mailman 
   
   "yahoo.com":
     disable_cache: false
     subnets:
-      - range: 93.115.18.106-93.115.18.111
-        max_messages: 10
-        max_interval: 1
+      - range: 93.115.18.97-93.115.18.120
+        max_messages: 1
+        max_interval: 60
+        max_errors: 400
         fallback_helo_host: mailman 
   
   default:

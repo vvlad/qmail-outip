@@ -1,4 +1,4 @@
-
+import re
 from twisted.internet import protocol
 from twisted.protocols.basic import LineReceiver
 from time import sleep
@@ -77,7 +77,8 @@ class IpManager(LineReceiver):
     ip_address = code = message = None
     
     try:
-      ip_address, code, message = line.split(" ", 2)
+      ip_address, rest = line.split(" ", 1)
+      _, code, _, message = re.split("(\d+)(.*?)", rest, 1)
     except Exception as e:
       error("got invalid line [%s] from qmail-remote", line)
       exception(e)
@@ -89,7 +90,6 @@ class IpManager(LineReceiver):
       error("%d %s", code, message)
       self.ip_address.makeBlacklisted()
       self.allocator.invalidateAssociation( self.domain, self.email_address)
-      critical("%s has been blacklisted by %s on pool %s", self.ip_address.ip_address, self.email_address, self.domain)
     else:
       info("%d %s", code, message)
 

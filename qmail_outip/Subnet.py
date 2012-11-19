@@ -16,7 +16,8 @@ class Subnet(object):
     self.max_messages = Subnet.DEFAULT_MESSAGE_RATE
     self.max_interval = Subnet.DEFAULT_INTERVAL
     self.helo_host = config.get('fallback_helo_host')
-    
+    self.errors = {}
+
     if self.helo_host is None:
       error("Missing fallback_helo_host for subnet %s"%(config)) 
       sys.exit(1)
@@ -81,25 +82,59 @@ class Subnet(object):
 
   def nextIpAddress(self):
     self.current_address = None
-    
-    while self.iterator <= self.range[-1]:
+    scans = 0
+
+    while self.iterator < self.range[-1]:
       self.iterator += 1
       address = IpAddress(str(IPv4Address(self.iterator)), default_helo_host = self.helo_host, subnet = self)
       
       if address.ip_address in self.blacklist:
         error("%s is blacklisted",address.ip_address)
         continue
-
+      
       self.current_address = address 
       self.current_messages = 0
       self.last_request = 0
       info(self)
       return self.current_address
+   
+    #cur = self.range[0]
+    #debug("End of subnet reached resetting")
+    #while cur < self.iterator:
+    #  address = IpAddress(str(IPv4Address(cur)), default_helo_host = self.helo_host, subnet = self)
+
+    #  if address.ip_address in self.blacklist:
+    #    error("%s is blacklisted",address.ip_address)
+    #    continue
+      
+    #  self.current_address = address 
+    #  self.current_messages = 0
+    #  self.last_request = 0
+    #  self.interator = cur
+    #  info(self)
+    #  return self.current_address
     
     self.exhausted = True
     return None
 
-  def blacklistIpAddress(self, ip_address): self.blacklist.append(ip_address)
+  def getMaxErrorsCount(self): return self.config.get('max_errors') or 50
+
+  def blacklistIpAddress(self, ip_address):
+    
+    value = 1
+    errors = self.errors
+
+    if errors.has_key(ip_address):
+      value = errors.get(ip_address) + 1
+      if value >= self.getMaxErrorsCount():
+        error("%d errors for %s blacklisted",value, ip_address)
+        self.blacklist.append(ip_address)
+    else:
+      value = 1
+    
+    warning("%d errors for %s",value, ip_address)
+
+    errors[ip_address] = value
 
 
 

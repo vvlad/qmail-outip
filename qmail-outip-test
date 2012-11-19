@@ -6,7 +6,7 @@ from time import sleep
 from random import random
 # a client protocol
 
-dataset = [ "email-%d@gmail.com"%(i) for i in range(0,1)]
+dataset = [ "email-%d@gmail.com"%(i) for i in range(0,200)]
 connector = None
 
 class OutIpClient(LineReceiver):
@@ -29,9 +29,10 @@ class OutIpClient(LineReceiver):
     bind_ip, helo_host = data.split(' ')
     print "%s[%s]"%(bind_ip, helo_host)
 
-    self.send("%s 400 test message"%(bind_ip))
+    self.send("%s 200 test message"%(bind_ip))
     print "Done sending"
-    #connector.disconnect()
+    connector.disconnect()
+    self
 
 
 
@@ -55,11 +56,9 @@ class OutIpFactory(protocol.ClientFactory):
     sleep(0.4)
     connector.connect()
   
-  def clientConnectionLost(self, connector):
-    connector.connect()
-  
   def clientConnectionLost(self, connector, reason):
     try:
+      print "Ok"
       self.email = self.dataset.next()
       connector.connect()
     except StopIteration:
@@ -67,12 +66,10 @@ class OutIpFactory(protocol.ClientFactory):
       #reactor.stop()
 
 
-def main():
-  reactor.connectTCP("localhost", 9000, OutIpFactory(dataset))
-  reactor.run()
-
 if __name__ == '__main__':
-  main()
+
+  connector = reactor.connectTCP("localhost", 9000, OutIpFactory(dataset))
+  reactor.run()
 
 
 

@@ -25,7 +25,7 @@ class Subnet(object):
     self.current_address = None
     if config.has_key('range'):
       start,stop = config['range'].split("-",2)
-      _range = xrange( int(IPv4Address(start))-1, int(IPv4Address(stop)) )
+      _range = range( int(IPv4Address(start))-1, int(IPv4Address(stop)) )
 
 
     if config.has_key("max_messages"): self.max_messages = config["max_messages"]
